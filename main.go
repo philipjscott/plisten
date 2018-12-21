@@ -3,10 +3,30 @@ package main
 import (
     "fmt"
     "log"
+    "time"
+    "errors"
     "github.com/google/gopacket/pcap"
+    "github.com/google/gopacket/layers"
+    "github.com/google/gopacket"
 )
 
-func isValidDevice(device pcap.Interface) bool {
+func getDevice() (*pcap.Interface, error) {
+    devices, err := pcap.FindAllDevs()
+
+    if err != nil {
+        return nil, err
+    }
+
+    for _, device := range devices {
+        if isActiveDevice(device) {
+            return &device, nil
+        }
+    }
+
+    return nil, errors.New("Failed to find active device")
+}
+
+func isActiveDevice(device pcap.Interface) bool {
     const loopbackMask = 0x01
     const runningMask = 0x04
 
@@ -15,33 +35,52 @@ func isValidDevice(device pcap.Interface) bool {
     }
 
     return len(device.Addresses) > 0
-}  
+}
 
-func validDevices(devices []pcap.Interface) {
-    // Print device information
-    fmt.Println("Devices found:")
-
-    for _, device := range devices {
-        if !isValidDevice(device) {
-            continue
-        }
-
-        fmt.Println("\nName: ", device.Name)
-        fmt.Println("Description: ", device.Description)
-        fmt.Println("Devices addresses: ", device.Description)
-        for _, address := range device.Addresses {
-            fmt.Println("- IP address: ", address.IP)
-            fmt.Println("- Subnet mask: ", address.Netmask)
-        }
-    }
+func setFilter(handle *pcap.Handle, ipAddr string) error {
+    return handle.SetBPFFilter("tcp")
 }
 
 func main() {
-    // Find all devices
-    devices, err := pcap.FindAllDevs()
+    var tcp layers.TCP
+    const (
+        snapshotLen int32  = 1024
+        promiscuous  bool   = false
+        timeout      time.Duration = 30 * time.Second
+    )
+
+    device, err := getDevice()
+    
     if err != nil {
         log.Fatal(err)
     }
 
-    validDevices(devices)
+    ipAddr := device.Addresses[0].IP.String()
+    handle, err := pcap.OpenLive(device.Name, snapshotLen, promiscuous, timeout)
+
+    defer handle.Close()
+
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    err = setFilter(handle, ipAddr)
+
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+    
+    for packet := range packetSource.Packets() {
+        parser := gopacket.NewDecodingLayerParser(layers.LayerTypeTCP, &tcp)
+        foundLayerTypes := []gopacket.LayerType{}
+
+        err := parser.DecodeLayers(packet.Data(), &foundLayerTypes)
+        if err != nil {
+            fmt.Println("Trouble decoding layers: ", err)
+        }
+
+        fmt.Println(string(tcp.LayerContents()))
+    }
 }
