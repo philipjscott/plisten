@@ -37,16 +37,25 @@ func isActiveDevice(device pcap.Interface) bool {
     return len(device.Addresses) > 0
 }
 
-func setFilter(handle *pcap.Handle, ipAddr string) error {
-    return handle.SetBPFFilter("tcp")
+func setDNSFilter(handle *pcap.Handle, ipAddr string) error {
+    return handle.SetBPFFilter("udp and port 53 and src host " + ipAddr)
 }
 
 func main() {
-    var tcp layers.TCP
+    var (
+        eth layers.Ethernet
+        ip4 layers.IPv4
+        ip6 layers.IPv6
+        tcp layers.TCP
+        udp layers.UDP
+        dns layers.DNS
+        payload gopacket.Payload
+    )
     const (
         snapshotLen int32  = 1024
         promiscuous  bool   = false
         timeout      time.Duration = 30 * time.Second
+        filter  string = "udp and port 53 and src host "
     )
 
     device, err := getDevice()
@@ -56,7 +65,12 @@ func main() {
     }
 
     ipAddr := device.Addresses[0].IP.String()
-    handle, err := pcap.OpenLive(device.Name, snapshotLen, promiscuous, timeout)
+
+    for _, ip := range device.Addresses {
+        fmt.Println(ip.IP.String())
+    }
+    
+    handle, err := pcap.OpenLive(device.Name, snapshotLen, promiscuous, pcap.BlockForever)
 
     defer handle.Close()
 
@@ -64,23 +78,50 @@ func main() {
         log.Fatal(err)
     }
 
-    err = setFilter(handle, ipAddr)
+    err = setDNSFilter(handle, ipAddr)
 
     if err != nil {
         log.Fatal(err)
     }
 
-    packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+    fmt.Println("hoo")
+
+    parser := gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &eth, &ip4, &ip6, &tcp, &udp, &dns, &payload)
     
-    for packet := range packetSource.Packets() {
-        parser := gopacket.NewDecodingLayerParser(layers.LayerTypeTCP, &tcp)
-        foundLayerTypes := []gopacket.LayerType{}
+    decodedLayers := make([]gopacket.LayerType, 0, 10)
+	for {
+		data, _, err := handle.ReadPacketData()
+		if err != nil {
+			fmt.Println("Error reading packet data: ", err)
+			continue
+		}
 
-        err := parser.DecodeLayers(packet.Data(), &foundLayerTypes)
-        if err != nil {
-            fmt.Println("Trouble decoding layers: ", err)
-        }
+		err = parser.DecodeLayers(data, &decodedLayers)
+		for _, typ := range decodedLayers {
+			switch typ {
+			case layers.LayerTypeDNS:
+				dnsResponseCode := int(dns.ResponseCode)
+				dnsANCount := int(dns.ANCount)
 
-        fmt.Println(string(tcp.LayerContents()))
-    }
+                for _, dnsQuestion := range dns.Questions {
+                    fmt.Println("    DNS Question: ", string(dnsQuestion.Name))
+                }
+                
+                fmt.Println("foo")
+				if (dnsANCount == 0 && dnsResponseCode > 0) || (dnsANCount > 0) {
+
+					fmt.Println("------------------------")
+					fmt.Println("    DNS Record Detected")
+
+					for _, dnsQuestion := range dns.Questions {
+						fmt.Println("    DNS Question: ", string(dnsQuestion.Name))
+					}
+				}
+			}
+		}
+
+		if err != nil {
+			fmt.Println("  Error encountered:", err)
+		}
+	}
 }
