@@ -65,10 +65,6 @@ func main() {
     }
 
     ipAddr := device.Addresses[0].IP.String()
-
-    for _, ip := range device.Addresses {
-        fmt.Println(ip.IP.String())
-    }
     
     handle, err := pcap.OpenLive(device.Name, snapshotLen, promiscuous, pcap.BlockForever)
 
@@ -84,11 +80,9 @@ func main() {
         log.Fatal(err)
     }
 
-    fmt.Println("hoo")
-
     parser := gopacket.NewDecodingLayerParser(layers.LayerTypeEthernet, &eth, &ip4, &ip6, &tcp, &udp, &dns, &payload)
-    
     decodedLayers := make([]gopacket.LayerType, 0, 10)
+
 	for {
 		data, _, err := handle.ReadPacketData()
 		if err != nil {
@@ -100,28 +94,15 @@ func main() {
 		for _, typ := range decodedLayers {
 			switch typ {
 			case layers.LayerTypeDNS:
-				dnsResponseCode := int(dns.ResponseCode)
-				dnsANCount := int(dns.ANCount)
-
                 for _, dnsQuestion := range dns.Questions {
-                    fmt.Println("    DNS Question: ", string(dnsQuestion.Name))
+                    timeFormatted := time.Now().Format("2006-01-02 15:04:05")
+                    fmt.Println(timeFormatted, "->", string(dnsQuestion.Name))
                 }
-                
-                fmt.Println("foo")
-				if (dnsANCount == 0 && dnsResponseCode > 0) || (dnsANCount > 0) {
-
-					fmt.Println("------------------------")
-					fmt.Println("    DNS Record Detected")
-
-					for _, dnsQuestion := range dns.Questions {
-						fmt.Println("    DNS Question: ", string(dnsQuestion.Name))
-					}
-				}
 			}
 		}
 
 		if err != nil {
-			fmt.Println("  Error encountered:", err)
+			fmt.Println("Error encountered: ", err)
 		}
 	}
 }
