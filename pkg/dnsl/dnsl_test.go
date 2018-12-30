@@ -1,18 +1,21 @@
 package dnsl
 
 import (
-	"fmt"
 	"net/http"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestDNSListen(t *testing.T) {
 	dl := New()
-	url := "www.facebook.com"
+	url := "http://www.facebook.com"
+	calledCallback := false
 
 	err := dl.Register(".*", func(d *DNSListener, match string) {
-		fmt.Println("foo")
-		if url != match {
+		calledCallback = true
+
+		if !strings.Contains(url, match) {
 			t.Fail()
 		}
 		d.Close()
@@ -23,7 +26,7 @@ func TestDNSListen(t *testing.T) {
 		t.Fail()
 	}
 
-	err = dl.Listen()
+	err = dl.Listen(nil)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -33,5 +36,12 @@ func TestDNSListen(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 		t.Fail()
+	}
+
+	// Sleep two seconds, since there is a 1 second timeout buffer for dnsl
+	time.Sleep(time.Second * 2)
+	if !calledCallback {
+		t.Fail()
+		t.Log("Failed to call callback")
 	}
 }

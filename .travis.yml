@@ -1,0 +1,8 @@
+sudo: true
+language: go
+# Only use the files in vendor
+install: true
+script:
+- sudo go test ./...
+notifications:
+  email: false

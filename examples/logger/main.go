@@ -18,11 +18,20 @@ func handleErr(e error) {
 }
 
 func main() {
+	var errChan chan error
 	dl := dnsl.New()
 
 	err := dl.Register(".*", logDns)
 	handleErr(err)
 
-	err = dl.Listen()
+	err = dl.Listen(errChan)
 	handleErr(err)
+
+	for err := range errChan {
+		if err != nil {
+			fmt.Println(err)
+			dl.Close()
+			break
+		}
+	}
 }

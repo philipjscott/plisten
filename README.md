@@ -20,15 +20,13 @@ func logDnsWarn(d *dnsl.DNSListener, match string) {
 	fmt.Println("You visited: " + match + ". Shouldn't you be working?")
 }
 
-
 func main() {
-	cap := dnscap.New()
+	dl := dnsl.New()
 
-	cap.Register(".*", logDns)
-	cap.Register(".*facebook.*", logDnsWarn)
-
-	cap.Listen()
+	dl.Register(".*", logDns)
+	dl.Register(".*facebook.*", logDnsWarn)
+	dl.Listen()
 }
 ```
 
-See `/examples` for more creative usages.
+See `/examples` for more specific and creative usages.
