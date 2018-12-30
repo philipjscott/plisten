@@ -41,10 +41,8 @@ func main() {
 	handleErr(err)
 
 	for err := range errChan {
-		if err != nil {
-			fmt.Println(err)
-			dl.Close()
-			break
-		}
+		fmt.Println(err)
+		dl.Close()
+		break
 	}
 }
