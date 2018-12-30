@@ -1,7 +1,10 @@
 language: go
-# Only use the files in vendor
-install: true
+before_install:
+- sudo apt-get install libpcap-dev
 script:
 - go test ./...
+
+# Only use the files in vendor
+install: true
 notifications:
   email: false
