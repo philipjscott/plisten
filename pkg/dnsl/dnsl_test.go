@@ -14,6 +14,7 @@ func TestDNSListen(t *testing.T) {
 	calledCallback := false
 
 	err := dl.Register(".*", func(d *DNSListener, match string) {
+		t.Log("Callback called!")
 		calledCallback = true
 
 		if !strings.Contains(url, match) {
