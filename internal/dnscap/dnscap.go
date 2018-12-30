@@ -1,6 +1,7 @@
 package dnscap
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/gopacket"
@@ -35,6 +36,9 @@ func New() (*DNSCapturer, error) {
 	devices, err := getActiveDevices()
 	if err != nil {
 		return nil, err
+	}
+	if len(devices) == 0 {
+		return nil, errors.New("No active devices found!")
 	}
 
 	handles, err := getHandles(devices)
