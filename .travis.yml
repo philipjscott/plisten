@@ -1,10 +1,10 @@
 language: go
 before_install:
+- curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+- deps ensure
 - sudo apt-get install libpcap-dev
 script:
 - go test ./...
 
-# Only use the files in vendor
-install: true
 notifications:
   email: false

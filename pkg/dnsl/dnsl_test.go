@@ -39,7 +39,7 @@ func TestDNSListen(t *testing.T) {
 	}
 
 	// Sleep two seconds, since there is a 1 second timeout buffer for dnsl
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 3)
 	if !calledCallback {
 		t.Fail()
 		t.Log("Failed to call callback")
