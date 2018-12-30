@@ -4,7 +4,7 @@ before_install:
 - dep ensure
 - sudo apt-get install libpcap-dev
 script:
-- go test ./...
+- sudo go test ./...
 
 notifications:
   email: false

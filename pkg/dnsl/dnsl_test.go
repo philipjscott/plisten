@@ -8,6 +8,7 @@ import (
 )
 
 func TestDNSListen(t *testing.T) {
+	var errChan chan error
 	dl := New()
 	url := "http://www.facebook.com"
 	calledCallback := false
@@ -26,7 +27,7 @@ func TestDNSListen(t *testing.T) {
 		t.Fail()
 	}
 
-	err = dl.Listen(nil)
+	err = dl.Listen(errChan)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -40,6 +41,14 @@ func TestDNSListen(t *testing.T) {
 
 	// Sleep two seconds, since there is a 1 second timeout buffer for dnsl
 	time.Sleep(time.Second * 3)
+
+	// Check if packet error occurred
+	err = <-errChan
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+
 	if !calledCallback {
 		t.Fail()
 		t.Log("Failed to call callback")
