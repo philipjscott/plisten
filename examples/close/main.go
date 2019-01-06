@@ -7,8 +7,10 @@ import (
 	"github.com/ScottyFillups/plisten/pkg/dnsl"
 )
 
-func logDns(d *dnsl.DNSListener, match string) {
-	fmt.Println(match)
+func closeSniffer(d *dnsl.DNSListener, match string) {
+	fmt.Println("You visited: " + match + ". Stopping sniffer!")
+
+	d.Close()
 }
 
 func handleErr(e error) {
@@ -21,7 +23,7 @@ func main() {
 	var errChan chan error
 	dl := dnsl.New()
 
-	err := dl.Register(".*", logDns)
+	err := dl.Register(".*test.*", closeSniffer)
 	handleErr(err)
 
 	err = dl.Listen(errChan)

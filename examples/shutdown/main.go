@@ -3,12 +3,25 @@ package main
 import (
 	"fmt"
 	"log"
+	"syscall"
 
 	"github.com/ScottyFillups/plisten/pkg/dnsl"
 )
 
-func logDns(d *dnsl.DNSListener, match string) {
-	fmt.Println(match)
+const limit = 5
+
+var (
+	visits = 0
+)
+
+func shutdown(d *dnsl.DNSListener, match string) {
+	visits += 1
+
+	fmt.Printf("%d requests remaining until shutdown\n", limit-visits+1)
+
+	if visits > limit {
+		syscall.Reboot(syscall.LINUX_REBOOT_CMD_POWER_OFF)
+	}
 }
 
 func handleErr(e error) {
@@ -21,7 +34,7 @@ func main() {
 	var errChan chan error
 	dl := dnsl.New()
 
-	err := dl.Register(".*", logDns)
+	err := dl.Register(".*googlevideo.*", shutdown)
 	handleErr(err)
 
 	err = dl.Listen(errChan)

@@ -1,1 +1,5 @@
-main
+examples/close/close
+examples/logger/logger
+examples/shutdown/shutdown
+examples/delayed/delayed
+vendor/
