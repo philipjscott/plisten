@@ -11,7 +11,7 @@ func TestDNSListen(t *testing.T) {
 	// TODO: Implement TUN/TAP interface for testing; it won't with travis-ci otherwise!
 	return
 
-	var dataChan chan Packet
+	dataChan := make(chan Packet)
 	dl := New()
 	url := "http://www.facebook.com"
 	calledCallback := false
