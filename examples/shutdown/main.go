@@ -31,7 +31,7 @@ func handleErr(e error) {
 }
 
 func main() {
-	var dataChan chan dnsl.Packet
+	dataChan := make(chan dnsl.Packet)
 	dl := dnsl.New()
 
 	err := dl.Register(".*googlevideo.*", shutdown)
