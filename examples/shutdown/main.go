@@ -15,7 +15,7 @@ var (
 )
 
 func shutdown(d *dnsl.DNSListener, match string) {
-	visits += 1
+	visits++
 
 	fmt.Printf("%d requests remaining until shutdown\n", limit-visits+1)
 
@@ -31,18 +31,20 @@ func handleErr(e error) {
 }
 
 func main() {
-	var errChan chan error
+	dataChan := make(chan dnsl.Packet)
 	dl := dnsl.New()
 
 	err := dl.Register(".*googlevideo.*", shutdown)
 	handleErr(err)
 
-	err = dl.Listen(errChan)
+	err = dl.Listen(dataChan)
 	handleErr(err)
 
-	for err := range errChan {
-		fmt.Println(err)
-		dl.Close()
-		break
+	for data := range dataChan {
+		if data.Error != nil {
+			fmt.Println(data.Error)
+			dl.Close()
+			break
+		}
 	}
 }

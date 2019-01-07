@@ -146,9 +146,9 @@ func getActiveDevices() ([]pcap.Interface, error) {
 
 func isActiveDevice(device pcap.Interface) bool {
 	const loopbackMask = 0x01
-	const upMask = 0x02
+	const activeMask = 0x04
 
-	if device.Flags&loopbackMask != 0 || device.Flags&upMask == 0 {
+	if device.Flags&loopbackMask != 0 || device.Flags&activeMask == 0 {
 		return false
 	}
 
