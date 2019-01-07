@@ -4,14 +4,15 @@ Register callback functions that trigger on tcp/udp requests. Currently only sup
 
 ## Documentation
 
-The godoc can be found here: https://godoc.org/github.com/ScottyFillups/plisten
+The godoc can be found here: https://godoc.org/github.com/ScottyFillups/plisten/pkg/dnsl
 
 ## Installation
 
 The binary provided in `cmd/` is currently just a DNS sniffer that logs requests; in the future I'm considering making a CLI for sniffing different layers (eg. HTTP)
 
 ```
-go get github.com/ScottyFillups/plisten
+go get github.com/ScottyFillups/plisten/cmd/plisten
+sudo plisten
 ```
 
 ## Usage
