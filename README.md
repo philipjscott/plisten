@@ -1,6 +1,6 @@
 # plisten
 
-Register callback functions that trigger on tcp/udp requests. Currently only supports DNS; I'd be willing to add more functionality if people are interested :smiley:
+Register callback functions that trigger on tcp/udp requests. Currently only supports DNS; I may add more functionality in the future.
 
 ## Documentation
 
