@@ -7,10 +7,6 @@ import (
 	"github.com/ScottyFillups/plisten/pkg/dnsl"
 )
 
-func logDNS(d *dnsl.DNSListener, match string) {
-	fmt.Println(match)
-}
-
 func handleErr(e error) {
 	if e != nil {
 		log.Fatal(e)
@@ -18,24 +14,19 @@ func handleErr(e error) {
 }
 
 func main() {
-	var dataChan chan dnsl.Packet
+	dataChan := make(chan dnsl.Packet)
 	dl := dnsl.New()
 
-	err := dl.Register(".*", logDNS)
+	err := dl.Listen(dataChan)
 	handleErr(err)
-
-	err = dl.Listen(dataChan)
-	handleErr(err)
-
-	fmt.Println("REE!!!")
 
 	for data := range dataChan {
-		fmt.Println("foo")
-
 		if data.Error != nil {
 			fmt.Println(data.Error)
 			dl.Close()
 			break
 		}
+
+		fmt.Println(data.Host)
 	}
 }

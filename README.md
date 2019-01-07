@@ -12,20 +12,33 @@ import (
 	"fmt"
 )
 
-func logDns(d *dnsl.DNSListener, match string) {
-	fmt.Println(match)
-}
-
-func logDnsWarn(d *dnsl.DNSListener, match string) {
+func logDNSWarn(d *dnsl.DNSListener, match string) {
 	fmt.Println("You visited: " + match + ". Shouldn't you be working?")
 }
 
 func main() {
+	dataChan := make(chan dnsl.Packet)
 	dl := dnsl.New()
 
-	dl.Register(".*", logDns)
-	dl.Register(".*facebook.*", logDnsWarn)
-	dl.Listen()
+	err := dl.Listen(dataChan)
+	if err != nil {
+		log.Fatal("Failed to initialize DNS listener")
+	}
+
+	err := dl.Register("*facebook*", logDNSWarn)
+	if err != nil {
+		log.Fatal("Failed to compile regexp")
+	}
+
+	for data := range dataChan {
+		if data.Error != nil {
+			fmt.Println(data.Error)
+			dl.Close()
+			break
+		}
+
+		fmt.Println(data.Host)
+	}
 }
 ```
 

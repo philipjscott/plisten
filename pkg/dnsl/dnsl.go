@@ -17,7 +17,6 @@ package dnsl
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 
 	"github.com/ScottyFillups/plisten/internal/dnscap"
@@ -68,7 +67,7 @@ func (d *DNSListener) Close() {
 // Returns an error if the packet capturer fails to initialize.
 //
 // If successful, Listen will run a go routine that listen for DNS requests, and call the appropriate registered callbacks.
-// The go routine can be closed via Close, and any packet decoding errors are sent to errChan
+// In addition to calling registered callbacks, all data will be sent to the dataChan channel.
 func (d *DNSListener) Listen(dataChan chan Packet) error {
 	d.active = true
 
@@ -81,38 +80,30 @@ func (d *DNSListener) Listen(dataChan chan Packet) error {
 		for {
 			dnsReqs := dcap.Read()
 
-			fmt.Println(len(dnsReqs))
-
 			for dnsReq := range dnsReqs {
-				fmt.Println(dnsReq.Request)
-
-				for regex, f := range d.handlers {
-					if dnsReq.Error != nil {
-						dataChan <- Packet{
-							Error: dnsReq.Error,
-							Host:  "",
-						}
-
-						continue
+				if dnsReq.Error != nil {
+					dataChan <- Packet{
+						Error: dnsReq.Error,
+						Host:  "",
 					}
-
+				} else {
 					dataChan <- Packet{
 						Error: nil,
 						Host:  dnsReq.Request,
 					}
 
-					if regex.MatchString(dnsReq.Request) {
-						f(d, dnsReq.Request)
-					}
-
-					if !d.active {
-						dcap.Close()
-						return
+					for regex, f := range d.handlers {
+						if regex.MatchString(dnsReq.Request) {
+							f(d, dnsReq.Request)
+						}
 					}
 				}
-			}
 
-			fmt.Println("onto the next")
+				if !d.active {
+					dcap.Close()
+					return
+				}
+			}
 		}
 	})()
 
