@@ -2,7 +2,7 @@ package dnscap
 
 import (
 	"errors"
-	"time"
+	"fmt"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -39,6 +39,10 @@ func New() (*DNSCapturer, error) {
 	}
 	if len(devices) == 0 {
 		return nil, errors.New("No active devices found!")
+	}
+
+	for _, device := range devices {
+		fmt.Println(device.Name)
 	}
 
 	handles, err := getHandles(devices)
@@ -103,12 +107,11 @@ func (d *DNSCapturer) Close() {
 
 func getHandle(deviceName string) (*pcap.Handle, error) {
 	const (
-		snapshotLen int32         = 1024
-		promiscuous bool          = false
-		timeout     time.Duration = time.Second * 1
+		snapshotLen int32 = 1024
+		promiscuous bool  = false
 	)
 
-	return pcap.OpenLive(deviceName, snapshotLen, promiscuous, timeout)
+	return pcap.OpenLive(deviceName, snapshotLen, promiscuous, pcap.BlockForever)
 }
 
 func getHandles(devices []pcap.Interface) ([]*pcap.Handle, error) {
@@ -146,9 +149,9 @@ func getActiveDevices() ([]pcap.Interface, error) {
 
 func isActiveDevice(device pcap.Interface) bool {
 	const loopbackMask = 0x01
-	const upMask = 0x02
+	const activeMask = 0x04
 
-	if device.Flags&loopbackMask != 0 || device.Flags&upMask == 0 {
+	if device.Flags&loopbackMask != 0 || device.Flags&activeMask == 0 {
 		return false
 	}
 

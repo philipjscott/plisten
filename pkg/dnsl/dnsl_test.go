@@ -11,7 +11,7 @@ func TestDNSListen(t *testing.T) {
 	// TODO: Implement TUN/TAP interface for testing; it won't with travis-ci otherwise!
 	return
 
-	var errChan chan error
+	var dataChan chan Packet
 	dl := New()
 	url := "http://www.facebook.com"
 	calledCallback := false
@@ -31,7 +31,7 @@ func TestDNSListen(t *testing.T) {
 		t.Fail()
 	}
 
-	err = dl.Listen(errChan)
+	err = dl.Listen(dataChan)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -48,9 +48,11 @@ func TestDNSListen(t *testing.T) {
 
 	// Do a non-blocking check to see if an error occured
 	select {
-	case err = <-errChan:
-		t.Log(err)
-		t.Fail()
+	case data := <-dataChan:
+		if data.Error != nil {
+			t.Log(data.Error)
+			t.Fail()
+		}
 	default:
 		t.Log("No packet errors occurred")
 	}
