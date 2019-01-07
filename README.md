@@ -2,9 +2,21 @@
 
 Register callback functions that trigger on tcp/udp requests. Currently only supports DNS; I'd be willing to add more functionality if people are interested :smiley:
 
-## Usage
+## Documentation
+
+The godoc can be found here: https://godoc.org/github.com/ScottyFillups/plisten
+
+## Installation
+
+The binary provided in `cmd/` is currently just a DNS sniffer that logs requests; in the future I'm considering making a CLI for sniffing different layers (eg. HTTP)
 
 ```
+go get github.com/ScottyFillups/plisten
+```
+
+## Usage
+
+```go
 package main
 
 import (

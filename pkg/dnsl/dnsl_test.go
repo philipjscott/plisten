@@ -52,9 +52,12 @@ func TestDNSListen(t *testing.T) {
 		if data.Error != nil {
 			t.Log(data.Error)
 			t.Fail()
+		} else {
+			t.Log("No packet errors occurred")
 		}
 	default:
-		t.Log("No packet errors occurred")
+		t.Log("No packet received")
+		t.Fail()
 	}
 
 	if !calledCallback {
