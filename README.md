@@ -12,6 +12,11 @@ The binary provided in `cmd/` is currently just a DNS sniffer that logs requests
 
 ```
 go get github.com/ScottyFillups/plisten/cmd/plisten
+```
+
+If `$GOPATH/bin` is in your `$PATH`, then you can invoke the binary:
+
+```
 sudo plisten
 ```
 
