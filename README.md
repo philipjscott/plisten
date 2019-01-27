@@ -28,6 +28,7 @@ package main
 import (
 	"github.com/ScottyFillups/plisten/pkg/dnsl"
 	"fmt"
+	"log"
 )
 
 func logDNSWarn(d *dnsl.DNSListener, match string) {
@@ -43,7 +44,7 @@ func main() {
 		log.Fatal("Failed to initialize DNS listener")
 	}
 
-	err := dl.Register("*facebook*", logDNSWarn)
+	err = dl.Register(".*facebook.*", logDNSWarn)
 	if err != nil {
 		log.Fatal("Failed to compile regexp")
 	}
