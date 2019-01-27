@@ -28,7 +28,7 @@ package main
 import (
 	"github.com/ScottyFillups/plisten/pkg/dnsl"
 	"fmt"
-  "log"
+	"log"
 )
 
 func logDNSWarn(d *dnsl.DNSListener, match string) {
